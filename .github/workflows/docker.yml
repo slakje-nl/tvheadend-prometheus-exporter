@@ -1,23 +1,40 @@
-name: Build and Push Docker Image to Docker Hub
+name: Build and Push Docker Image to GHCR
 
 on:
   push:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   push_to_registry:
-    name: push docker image to hub
+    name: push docker image to ghcr
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: check repository
         uses: actions/checkout@v4
 
-      - name: login to docker registry
+      - name: login to github container registry
         uses: docker/login-action@v3
         with:
-          username: ${{secrets.DOCKERHUB_USERNAME}}
-          password: ${{secrets.DOCKERHUB_TOKEN}}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: extract docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha
 
       - name: build and push docker image to registry
         uses: docker/build-push-action@v5
@@ -25,4 +42,5 @@ jobs:
           platforms: linux/amd64
           context: .
           push: true
-          tags: sokolimedia/tvheadend-prometheus-exporter:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
