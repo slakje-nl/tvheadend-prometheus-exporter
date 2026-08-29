@@ -2,7 +2,7 @@
 
 Simple project to export tvheadend metrics to Prometheus.
 
-Docker image: `sokolimedia/tvheadend-prometheus-exporter:latest`
+Docker image: `ghcr.io/slakje-nl/tvheadend-prometheus-exporter:latest`
 
 Project exports http api on `:9000` with metrics at `/metrics` url.
 

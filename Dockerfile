@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine as build
+FROM golang:1.24-alpine AS build
 
 WORKDIR /app
 
@@ -7,13 +7,15 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /prometheus-exporter
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /prometheus-exporter
 
-CMD ["/prometheus-exporter"]
+FROM alpine:3.22
 
-FROM debian:latest
+RUN apk add --no-cache ca-certificates
 
-RUN apt-get update && apt-get install -y intel-gpu-tools && apt-get clean
 COPY --from=build /prometheus-exporter /prometheus-exporter
+
+USER nobody
+EXPOSE 9000
 
 ENTRYPOINT ["/prometheus-exporter"]
